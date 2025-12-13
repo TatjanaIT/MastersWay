@@ -8,7 +8,6 @@ from config import settings
 fake = Faker("ru_RU")
 SCHEMA = settings.SCHEMA
 
-# --------- справочник тегов путей ---------
 WAY_TAGS = [
     "Data Analytics",
     "Product Analytics",
@@ -53,7 +52,7 @@ def random_created_updated_last_6_months():
     return created_at, updated_at
 
 
-# ===== 1. PROJECTS + WAYS =====
+# 1. PROJECTS + WAYS
 def seed_projects_and_ways(cur):
     cur.execute("SELECT uuid FROM users WHERE is_mentor = TRUE;")
     mentors = [row[0] for row in cur.fetchall()]
@@ -65,7 +64,7 @@ def seed_projects_and_ways(cur):
         print("  [!] Нет менторов или студентов — сначала seed_users_block")
         return
 
-    # ---- projects ----
+    # projects
     project_titles = [
         "Анализ продаж по регионам",
         "Дашборд по воронке продаж",
@@ -101,7 +100,7 @@ def seed_projects_and_ways(cur):
 
     print(f" Projects created: {len(project_uuids)}")
 
-    # ---- ways ----
+    # ways
     way_names = [
         "Python для аналитиков",
         "Основы SQL",
@@ -166,7 +165,7 @@ def seed_projects_and_ways(cur):
     print(f"  Ways created: {ways_created}")
 
 
-# ===== 2. WAY_TAGS =====
+# 2. WAY_TAGS
 def seed_way_tags(cur):
     print("  Seeding way_tags...")
 
@@ -187,7 +186,7 @@ def seed_way_tags(cur):
     print(f"  way_tags: +{inserted}, всего {len(WAY_TAGS)}")
 
 
-# ===== 3. WAY_COLLECTIONS =====
+# 3. WAY_COLLECTIONS
 def seed_way_collections(cur):
     print("  Seeding way_collections...")
 
@@ -235,7 +234,7 @@ def seed_way_collections(cur):
     print(f"  way_collections inserted: {inserted}")
 
 
-# ===== 4. WAYS_WAY_TAGS =====
+#4. WAYS_WAY_TAGS
 def seed_ways_way_tags(cur):
     print("  Seeding ways_way_tags...")
 
@@ -262,8 +261,7 @@ def seed_ways_way_tags(cur):
 
     print("  ways_way_tags done")
 
-
-# ===== 5. COLLECTIONS + COMPOSITES =====
+# 5. COLLECTIONS + COMPOSITES 
 def seed_collections_and_composites(cur):
     print("  Seeding way_collections_ways & composite_ways...")
 
@@ -312,16 +310,15 @@ def seed_collections_and_composites(cur):
 
     print(f"  composite_ways inserted: {comp_inserted}")
 
-
-# ===== 6. USERS_PROJECTS =====
+# 6. USERS_PROJECTS 
 def seed_users_projects(cur):
     print("  -> Seeding users_projects...")
 
-    # 1. Студенты
+    # Students
     cur.execute(f"SELECT uuid FROM {SCHEMA}.users WHERE is_mentor = FALSE;")
     user_ids = [row[0] for row in cur.fetchall()]
 
-    # 2. Проекты
+    # Projects
     cur.execute(f"SELECT uuid FROM {SCHEMA}.projects;")
     project_ids = [row[0] for row in cur.fetchall()]
 
@@ -348,7 +345,7 @@ def seed_users_projects(cur):
 
     print(f"  <- users_projects done (inserted {inserted})")
 
-# ===== MAIN BLOCK =====
+# MAIN FUNCTION 
 def seed_ways_block():
     print("=== Seeding WAYS BLOCK ===")
 

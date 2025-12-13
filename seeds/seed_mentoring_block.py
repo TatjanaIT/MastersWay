@@ -5,7 +5,7 @@ from config import settings
 
 SCHEMA = settings.SCHEMA
 
-
+# MAIN FUNCTION 
 def seed_mentoring_block():
     print("=== Seeding MENTORING BLOCK ===")
 
@@ -15,14 +15,14 @@ def seed_mentoring_block():
         cur = conn.cursor()
         cur.execute(f"SET search_path TO {SCHEMA}, public;")
 
-        # --- все пользователи ---
+        # all users
         cur.execute("SELECT uuid FROM users;")
         user_ids = [row[0] for row in cur.fetchall()]
         if len(user_ids) < 2:
             print("  [!] ERROR: need at least 2 users")
             return
 
-        # --- все пути (ways) ---
+        # all ways
         cur.execute("SELECT uuid FROM ways;")
         way_ids = [row[0] for row in cur.fetchall()]
         if not way_ids:
@@ -41,7 +41,7 @@ def seed_mentoring_block():
         from_requests = 0
         to_requests = 0
 
-        # --- mentor_users_ways и former_mentors_ways ---
+        # mentor_users_ways and former_mentors_ways 
         for way_uuid in way_ids:
             # 1–3 текущих ментора на путь
             k_current = min(random.randint(1, 3), len(mentors))
@@ -76,8 +76,7 @@ def seed_mentoring_block():
                     )
                     former_links += 1
 
-        # --- from_user_mentoring_requests ---
-        # запросы от студентов "хочу ментора по этому пути"
+        # from_user_mentoring_requests (запросы от студентов "хочу ментора по этому пути"=
         for student_uuid in students:
             k_req = random.randint(0, min(3, len(way_ids)))
             if k_req == 0:
@@ -96,8 +95,7 @@ def seed_mentoring_block():
                 )
                 from_requests += 1
 
-        # --- to_user_mentoring_requests ---
-        # запросы к менторам "возьми студента по этому пути"
+        # to_user_mentoring_requests (запросы к менторам "возьми студента по этому пути")
         for mentor_uuid in mentors:
             k_req = random.randint(0, min(3, len(way_ids)))
             if k_req == 0:

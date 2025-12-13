@@ -21,7 +21,6 @@ COMMENT_TEMPLATES = [
 def random_updated_from_created(created_at, max_shift_hours=24):
    
     now = datetime.now()
-
     if created_at >= now:
         return now
 
@@ -40,20 +39,18 @@ def generate_comment_text() -> str:
     text = f"{base} {extra}"
     return text[:2950]
 
-
-# ================== A. comments ==================
-
+# 1. COMMENTS
 def seed_comments(cur):
     print("  -> Seeding comments...")
 
-    # все пользователи
+    # all users
     cur.execute(f"SELECT uuid FROM {SCHEMA}.users;")
     user_ids = [row[0] for row in cur.fetchall()]
     if not user_ids:
         print("  [!] ERROR: no users found")
         return
 
-    # все day_reports
+    # all day_reports
     cur.execute(f"SELECT uuid, created_at FROM {SCHEMA}.day_reports;")
     report_rows = cur.fetchall()
     if not report_rows:
@@ -95,9 +92,7 @@ def seed_comments(cur):
     print(f"  <- comments done (inserted {total_inserted})")
 
 
-# ================== B. favorite_users ==================
-
-
+# 2. FAVORITE_USERS
 def seed_favorite_users(cur):
     print("  -> Seeding favorite_users...")
 
@@ -132,9 +127,7 @@ def seed_favorite_users(cur):
     print(f"  <- favorite_users done (inserted {total_inserted})")
 
 
-# ================== C. favorite_users_ways ==================
-
-
+# 3. FAVORITE_USERS_WAYS
 def seed_favorite_users_ways(cur):
     print("  -> Seeding favorite_users_ways...")
 
@@ -170,9 +163,7 @@ def seed_favorite_users_ways(cur):
     print(f"  <- favorite_users_ways done (inserted {total_inserted})")
 
 
-# ================== MAIN BLOCK ==================
-
-
+# MAIN FUNCTION
 def seed_social_block():
     print("=== Seeding SOCIAL BLOCK ===")
 
@@ -192,7 +183,7 @@ def seed_social_block():
         print("Error in social block:", e)
     finally:
         conn.close()
-
+        
 
 if __name__ == "__main__":
     seed_social_block()

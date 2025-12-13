@@ -11,23 +11,36 @@
 - Docker 29.0.1
 - Docker compose v2.40.3-desktop.1
 - Git 2.43.0 
-.gitignore готов
 
-Теперь Git не будет добавлять:
+## 2. Инструкция(по шагам) Linux/WSL система
 
-venv
+1. Установка пакета для виртуальных окружений
+    sudo apt update
+    sudo apt install python3-venv
 
-.env
+2. Создание и активация виртуального окружения
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install --upgrade pip
+    
+3. Убедитесь, что окружение активно — в терминале перед строкой должно отображаться:
+    (venv)
 
-кеш Python
+4. Установка библиотек для проекта
+    pip install -r requirements.txt
 
-настройки VS Code
+5. Запуск Docker-сервисов
+    docker compose up -d
 
-данные
+6. Проверить, что контейнеры запущены
+    docker ps
 
-## 2. Инструкция(по шагам)
+    Вы увидите сервисы:
+        postgres (порт 5433 → 5432)
+        pgadmin
+        grafana
 
-1
-2
-3
+7. Применение миграций и сидов
+    python3 reset_and_seed.py
 
+После выполнения — данные должны появиться в таблице и базе

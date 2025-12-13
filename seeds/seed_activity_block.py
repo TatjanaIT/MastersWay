@@ -7,11 +7,10 @@ from config import settings
 SCHEMA = settings.SCHEMA
  
 
-# ==== helpers ====
-def random_past_date(days_back=90):
-    """Случайная дата в прошлом (от 1 до days_back дней назад)."""
+# helpers 
+def random_past_date(days_back=90): #Случайная дата в прошлом (от 1 до days_back дней назад)
     today = datetime.now()
-    delta = timedelta(days=random.randint(1, days_back))
+    delta = timedelta(days=random.randint(1, days_back)) 
     return today - delta
 
 def random_updated_from_created(created_at, max_shift_hours=72):
@@ -59,7 +58,7 @@ def get_unique_date_for_way(cur, way_uuid, days_back=90, max_tries=50):
 
 
 def generate_metric_description(is_done: bool, estimation: int) -> str:
-    """Осмысленное описание метрики под учебную платформу."""
+    """Описание метрики под учебную платформу."""
     tasks = [
         "урок по основам Python",
         "модуль по SQL и запросам",
@@ -101,7 +100,7 @@ def generate_metric_description(is_done: bool, estimation: int) -> str:
     return description[:295]
 
 
-# ====== A. day_reports + metrics ======
+# A. day_reports + metrics 
 def seed_day_reports_and_metrics(cur):
     print("  -> Seeding day_reports & metrics...")
 
@@ -176,7 +175,7 @@ def seed_day_reports_and_metrics(cur):
     print("  <- day_reports & metrics done")
 
 
-# ====== B. job_tags ======
+# B. job_tags 
 JOB_TAG_NAMES = [
     "Практика SQL",
     "Домашка по Python",
@@ -237,7 +236,7 @@ def seed_job_tags(cur):
     print(f"  <- job_tags done (inserted {inserted})")
 
 
-# ====== C. plans ======
+# C. plans 
 PLAN_TEMPLATES = [
     "Изучить новую тему: «{topic}».",
     "Разобрать теорию и примеры по теме «{topic}».",
@@ -257,12 +256,10 @@ PLAN_TOPICS = [
     "Проектная работа",
 ]
 
-
 def generate_plan_description():
     topic = random.choice(PLAN_TOPICS)
     template = random.choice(PLAN_TEMPLATES)
     return template.format(topic=topic)
-
 
 def seed_plans(cur):
     print("  -> Seeding plans...")
@@ -312,7 +309,7 @@ def seed_plans(cur):
     print("  <- plans done")
 
 
-# ====== D. plans_job_tags ======
+# D. plans_job_tags 
 def seed_plans_job_tags(cur):
     print("  -> Seeding plans_job_tags...")
 
@@ -365,7 +362,7 @@ def seed_plans_job_tags(cur):
     print(f"  <- plans_job_tags done (inserted {inserted})")
 
 
-# ====== E. problems ======
+# E. problems 
 PROBLEM_TEMPLATES = [
     "Решить задачи по теме «{topic}» (минимум {n} задания).",
     "Разобрать примеры и самостоятельно написать решения по теме «{topic}».",
@@ -395,7 +392,6 @@ def generate_problem_description():
     template = random.choice(PROBLEM_TEMPLATES)
     text = template.format(topic=topic, n=n)
     return text if len(text) <= 2950 else text[:2950]
-
 
 def seed_problems(cur):
     print("  -> Seeding problems...")
@@ -443,7 +439,7 @@ def seed_problems(cur):
     print("  <- problems done")
 
 
-# ====== F. job_dones ======
+# F. job_dones
 JOB_DONE_TEMPLATES = [
     "Выполнил(а) задачу по теме «{topic}».",
     "Завершил(а) упражнение: {topic}.",
@@ -518,7 +514,7 @@ def seed_job_dones(cur):
     print("  <- job_dones done")
 
 
-# ====== G. job_dones_job_tags ======
+# G. job_dones_job_tags 
 def seed_job_dones_job_tags(cur):
     print("  -> Seeding job_dones_job_tags...")
 
@@ -533,7 +529,7 @@ def seed_job_dones_job_tags(cur):
     for tag_uuid, way_uuid in rows:
         tags_by_way.setdefault(way_uuid, []).append(tag_uuid)
 
-    # 2. job_dones + их way_uuid
+    # 2. job_dones + way_uuid
     cur.execute(
         f"""
         SELECT jd.uuid AS job_done_uuid,
@@ -571,8 +567,7 @@ def seed_job_dones_job_tags(cur):
 
     print(f"  <- job_dones_job_tags done (inserted {inserted})")
 
-
-# ====== MAIN BLOCK ======
+# MAIN BLOCK 
 def seed_activity_block():
     print("=== Seeding ACTIVITY BLOCK ===")
 
@@ -581,32 +576,21 @@ def seed_activity_block():
         cur = conn.cursor()
         cur.execute(f"SET search_path TO {SCHEMA}, public;")
 
-        # 1. отчёты и метрики
         seed_day_reports_and_metrics(cur)
-
-        # 2. job_tags — источник для всех *_job_tags
         seed_job_tags(cur)
-
-        # 3. планы
         seed_plans(cur)
-
-        # 4. связи планов и тегов
         seed_plans_job_tags(cur)
-
-        # 5. проблемы
         seed_problems(cur)
-
-        # 6. сделанные задачи
         seed_job_dones(cur)
-
-        # 7. связи job_dones и тегов
         seed_job_dones_job_tags(cur)
 
         conn.commit()
         print("=== ACTIVITY BLOCK COMPLETED ===")
+   
     except Exception as e:
         conn.rollback()
         print("Error in activity block:", e)
+    
     finally:
         conn.close()
 
