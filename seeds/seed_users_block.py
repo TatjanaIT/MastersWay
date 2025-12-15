@@ -9,11 +9,13 @@ from config import settings
 fake = Faker("ru_RU")
 SCHEMA = settings.SCHEMA
 
-PRICING_PLANS = ["free", "ai-starter", "starter", "pro"]
+PRICING_PLANS = ["free", "ai-starter", "starter", "pro", "b2b"]
 USER_TAG_NAMES = ["Python", "SQL", "PostgreSQL", "Power BI", "Tableau",
                   "Data Analyst", "Product Analyst", "Marketing",
                   "Junior", "Middle", "Senior", "Mentor"]
 
+MENTORS = 7
+STUDENTS = 23
 
 # Helper functions
 
@@ -65,16 +67,15 @@ def generate_contact():
 
 
 # MAIN FUNCTION
-def seed_users_block(mentors_amount: int,
-                     students_amount: int):
+def seed_users_block(mentors_amount: int = MENTORS,
+                     students_amount: int = STUDENTS):
     
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute(f"SET search_path TO {settings.SCHEMA}, public;")
 
-    print("=== Seeding USERS BLOCK ===")
-
+    print("= Seeding USERS BLOCK =")
 
     # 1. USERS 
     user_ids = []
@@ -213,8 +214,5 @@ def seed_users_block(mentors_amount: int,
 
     print("=== USERS BLOCK COMPLETED ===")
 
-DEFAULT_MENTORS = 7
-DEFAULT_STUDENTS = 23
-
 if __name__ == "__main__":
-    seed_users_block(DEFAULT_MENTORS, DEFAULT_STUDENTS)
+    seed_users_block()

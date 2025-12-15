@@ -1,17 +1,9 @@
-"""
-Полный очистка и наполнение схемы o_test.
-
-1. TRUNCATE всех таблиц в схеме o_test
-2. Запуск глобального сидера (seed_all)
-"""
-
 from db.connection import get_connection
 from config.settings import SCHEMA
 from seeds.seed_all import main as global_seed_main
 
-
 def ask_confirmation():
-    print("⚠️ ВНИМАНИЕ: Эта операция УДАЛИТ ВСЕ ДАННЫЕ в таблицах схемы o_test!")
+    print(f"\n⚠️ ВНИМАНИЕ: Эта операция УДАЛИТ ВСЕ ДАННЫЕ в таблицах схемы '{SCHEMA}'!")
     print("Структура таблиц сохранится.")
     print("Продолжить? (yes/no): ", end="")
 
@@ -22,14 +14,13 @@ def ask_confirmation():
     print("Операция отменена пользователем.")
     return False
 
-
 def truncate_all_tables():
     conn = None
     try:
         conn = get_connection()
         cur = conn.cursor()
 
-        print(f"\nПолучаем список всех таблиц в схеме {SCHEMA}...")
+        print(f"\nПолучаем список всех таблиц в схеме '{SCHEMA}' ")
 
         cur.execute(
             f"""
@@ -59,19 +50,18 @@ def truncate_all_tables():
         if conn:
             conn.close()
 
-
 def main():
-    print("\n========== RESET DATA + SEED ==========\n")
+    print("\n= RESET DATA + SEED =\n")
 
     if not ask_confirmation():
         return
 
     truncate_all_tables()
 
-    print("🚀 Запускаем глобальный сидер seed_all...\n")
+    print("Запускаем глобальный сидер seed_all...\n")
     global_seed_main()
 
-    print("\n🎉 Готово: данные пересозданы, структура таблиц сохранена.\n")
+    print("\nГотово: данные пересозданы, структура таблиц сохранена.\n")
 
 
 if __name__ == "__main__":

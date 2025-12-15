@@ -4,4 +4,4 @@ DB_PASSWORD = "postgres"
 DB_HOST = "localhost"
 DB_PORT = 5433
 
-SCHEMA = "o_test"
+SCHEMA = "mw_schema"
