@@ -13,34 +13,56 @@
 
 ## 2. Инструкция Linux/WSL система
 
-1. Установка пакета для виртуальных окружений
-    sudo apt update
-    sudo apt install python3-venv
+1. Создать схему используя 000001_init_schema.up.sql в PostgreSQL (я использую в проекте название SCHEMA = "o_test"), если используете другое наазвание замените его в config/settings.py 
 
-2. Создание и активация виртуального окружения
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install --upgrade pip
+2. Перейти в папку с скаченым проектом
+    - cd /mnt/c/"Users"/"USERNAME"/MastersWay
+    - или cd MastersWay
+
+3. Установка пакета для виртуальных окружений (Один раз на системе (если ещё не делали))
+    - sudo apt update
+    - sudo apt install python3-venv
+
+3. Создание и активация виртуального окружения
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
     
-3. Убедитесь, что окружение активно — в терминале перед строкой должно отображаться:
-    (venv)
+4. Убедитесь, что окружение активно — в терминале перед строкой должно отображаться:
+    - (venv)
 
-4. Установка библиотек для проекта
-    pip install -r requirements.txt
+5. Установка библиотек для проекта (из корня проекта)
+    - pip install -r requirements.txt
 
-5. Запуск Docker-сервисов
-    docker compose up -d
+6. Запуск Docker-сервисов (из корня проекта)
+    - docker compose up -d
 
-6. Проверить, что контейнеры запущены
-    docker ps
+- Команда docker compose не найдена
+                - Проверить версию Docker:
+                - docker --version
 
-    Вы увидите сервисы:
-        postgres (порт 5433 → 5432)
-        pgadmin
-        grafana
+- Если используется старая версия Docker:
+                - sudo apt install docker-compose
 
-7. Применение миграций и сидов
-    python3 reset_and_seed.py
+7. Проверить, что контейнеры запущены
+    - docker ps
 
+    - Вы увидите сервисы:
+        - postgres
+        - pgadmin
+        - grafana
+
+- Подключить сервер
+ - PostgreSQL
+        - host: localhost
+        - port: 5433
+        - database: mydb
+        - user: postgres
+        - password: postgres
+        
+8. До запуска reset_and_seed.py убедиться что создана схема("o_test")
+
+8. Применение сидов
+    - python3 reset_and_seed.py
 
 После выполнения — данные должны появиться в таблице и базе
