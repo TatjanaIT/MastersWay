@@ -37,13 +37,6 @@
 6. Запуск Docker-сервисов (из корня проекта)
     - docker compose up -d
 
-- Команда docker compose не найдена
-                - Проверить версию Docker:
-                - docker --version
-
-- Если используется старая версия Docker:
-                - sudo apt install docker-compose
-
 7. Проверить, что контейнеры запущены
     - docker ps
 
@@ -52,7 +45,7 @@
         - pgadmin
         - grafana
 
-- Подключить сервер
+- База данных будет доступна по:
  - PostgreSQL
         - host: localhost
         - port: 5433

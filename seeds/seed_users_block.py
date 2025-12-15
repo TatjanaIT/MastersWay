@@ -14,8 +14,6 @@ USER_TAG_NAMES = ["Python", "SQL", "PostgreSQL", "Power BI", "Tableau",
                   "Data Analyst", "Product Analyst", "Marketing",
                   "Junior", "Middle", "Senior", "Mentor"]
 
-DEFAULT_MENTORS = 7
-DEFAULT_STUDENTS = 23
 
 # Helper functions
 
@@ -67,8 +65,8 @@ def generate_contact():
 
 
 # MAIN FUNCTION
-def seed_users_block(mentors_amount: int = DEFAULT_MENTORS,
-                     students_amount: int = DEFAULT_STUDENTS):
+def seed_users_block(mentors_amount: int,
+                     students_amount: int):
     
     conn = get_connection()
     cur = conn.cursor()
@@ -215,6 +213,8 @@ def seed_users_block(mentors_amount: int = DEFAULT_MENTORS,
 
     print("=== USERS BLOCK COMPLETED ===")
 
+DEFAULT_MENTORS = 7
+DEFAULT_STUDENTS = 23
 
 if __name__ == "__main__":
-    seed_users_block()
+    seed_users_block(DEFAULT_MENTORS, DEFAULT_STUDENTS)
