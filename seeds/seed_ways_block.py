@@ -3,37 +3,26 @@ from datetime import datetime, timedelta
 from faker import Faker
 
 from db.connection import get_connection
-from config import settings
+from config import settings, seed_config
 
 fake = Faker("ru_RU")
+
 SCHEMA = settings.SCHEMA
+WAY_TAGS = seed_config.WAY_TAGS
 
-WAY_TAGS = [
-    "Data Analytics",
-    "Product Analytics",
-    "Маркетинговая аналитика",
-    "BI / Дашборды",
-    "Data Engineering",
-    "Python трек",
-    "SQL трек",
-    "Основы аналитики",
-    "Продвинутая аналитика",
-    "Soft Skills",
-    "Карьерный трек",
-    "Проектная работа",
-]
+project_titles = seed_config.PROJECTS_TITLES
+projects_count = seed_config.PROJECTS_COUNT
+way_names = seed_config.WAY_NAMES
+titles = seed_config.TITLES
+types = seed_config.TYPES
 
+# Helper functions
 def random_date_within_6_months():
     today = datetime.now()
     delta_days = random.randint(0, 180)
     return today - timedelta(days=delta_days)
 
 def random_created_updated_last_6_months():
-    """
-    Возвращает (created_at, updated_at):
-    - created_at: случайная дата за последние 6 месяцев
-    - updated_at: случайная дата от created_at до текущего момента
-    """
     now = datetime.now()
 
     # created_at: от 0 до 180 дней назад
@@ -65,21 +54,7 @@ def seed_projects_and_ways(cur):
         return
 
     # projects
-    project_titles = [
-        "Анализ продаж по регионам",
-        "Дашборд по воронке продаж",
-        "A/B-тест посадочной страницы",
-        "Прогноз оттока клиентов",
-        "Кластеризация клиентов",
-        "Оценка эффективности рекламных каналов",
-        "Исследование поведения пользователей",
-        "Моделирование LTV",
-        "Оптимизация маркетингового бюджета",
-        "Мониторинг продуктовых метрик",
-    ]
-
     project_uuids = []
-    projects_count = 20
 
     for _ in range(projects_count):
         title = random.choice(project_titles)
@@ -101,19 +76,6 @@ def seed_projects_and_ways(cur):
     print(f" Projects created: {len(project_uuids)}")
 
     # ways
-    way_names = [
-        "Python для аналитиков",
-        "Основы SQL",
-        "BI-дэшборды в Power BI",
-        "Аналитика в Excel",
-        "Введение в машинное обучение",
-        "Продуктовая аналитика",
-        "Маркетинговая аналитика",
-        "Визуализация данных в Tableau",
-        "A/B-тестирование для начинающих",
-        "Аналитика поведения пользователей",
-    ]
-
     ways_created = 0
 
     for name in way_names:
@@ -133,30 +95,15 @@ def seed_projects_and_ways(cur):
         cur.execute(
             """
             INSERT INTO ways
-                (uuid, name, goal_description,
-                 updated_at, created_at,
-                 estimation_time, owner_uuid,
-                 copied_from_way_uuid,
-                 is_completed, is_private,
-                 project_uuid)
+                (uuid, name, goal_description, updated_at, created_at, estimation_time, owner_uuid,
+                 copied_from_way_uuid, is_completed, is_private, project_uuid)
             VALUES
-                (gen_random_uuid(), %s, %s,
-                 %s, %s,
-                 %s, %s,
-                 NULL,
-                 %s, %s,
-                 %s);
+                (gen_random_uuid(), %s, %s, %s, %s, %s, %s,
+                 NULL, %s, %s,%s);
             """,
             (
-                name,
-                goal_description,
-                updated_at,
-                created_at,
-                estimation_time,
-                owner_uuid,
-                is_completed,
-                is_private,
-                project_uuid,
+                name, goal_description, updated_at, created_at, estimation_time, owner_uuid,
+                is_completed, is_private, project_uuid,
             ),
         )
 
@@ -200,16 +147,6 @@ def seed_way_collections(cur):
     if not users:
         print("  [!] Нет пользователей для коллекций")
         return
-
-    titles = [
-        "Основные аналитические треки",
-        "Продвинутые треки",
-        "Быстрый старт",
-        "Навыки аналитика",
-        "Специализации",
-    ]
-
-    types = ["public", "private", "system"]
 
     inserted = 0
     for _ in range(10):

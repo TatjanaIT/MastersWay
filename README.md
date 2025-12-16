@@ -11,7 +11,7 @@
 - Docker 29.0.1
 - Docker compose v2.40.3-desktop.1
 - Python3-venv
-        - sudo apt install python3-venv   (выполнить один раз, если venv ещё не установлен)
+    - sudo apt install python3-venv (выполнить один раз, если venv ещё не установлен)
 
 ## 2. Инструкция Linux/WSL Ubuntu система
 
@@ -46,7 +46,7 @@
                 - password: postgres
 
 6. Создание схемы и таблиц 
-        - python3 create_shema_and_tables.py
+    - python3 create_shema_and_tables.py
 
 7. Применение сидов
     - python3 reset_and_seed.py

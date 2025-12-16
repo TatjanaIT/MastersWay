@@ -4,21 +4,17 @@ from faker import Faker
 import unidecode
 
 from db.connection import get_connection
-from config import settings
+from config import settings, seed_config
 
 fake = Faker("ru_RU")
+
 SCHEMA = settings.SCHEMA
-
-PRICING_PLANS = ["free", "ai-starter", "starter", "pro", "b2b"]
-USER_TAG_NAMES = ["Python", "SQL", "PostgreSQL", "Power BI", "Tableau",
-                  "Data Analyst", "Product Analyst", "Marketing",
-                  "Junior", "Middle", "Senior", "Mentor"]
-
-MENTORS = 7
-STUDENTS = 23
+PRICING_PLANS = seed_config.PRICING_PLANS
+USER_TAG_NAMES = seed_config.USER_TAG_NAMES 
+MENTORS = seed_config.MENTORS
+STUDENTS = seed_config.STUDENTS
 
 # Helper functions
-
 def random_date_within_6_months():
     today = datetime.now()
     delta_days = random.randint(0, 180)

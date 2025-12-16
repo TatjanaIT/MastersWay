@@ -29,7 +29,7 @@ def seed_mentoring_block():
             print("  [!] ERROR: no ways found")
             return
 
-        # --- делим пользователей на менторов и студентов ---
+        # делим пользователей на менторов и студентов (30% менторов)
         num_mentors = max(1, int(len(user_ids) * 0.3))
         mentors = set(random.sample(user_ids, num_mentors))
         students = [u for u in user_ids if u not in mentors]
@@ -76,7 +76,7 @@ def seed_mentoring_block():
                     )
                     former_links += 1
 
-        # from_user_mentoring_requests (запросы от студентов "хочу ментора по этому пути"=
+        # from_user_mentoring_requests (запросы от студентов "хочу ментора по этому пути")
         for student_uuid in students:
             k_req = random.randint(0, min(3, len(way_ids)))
             if k_req == 0:

@@ -2,10 +2,17 @@ import random
 from datetime import datetime, timedelta
 
 from db.connection import get_connection
-from config import settings
+from config import settings, seed_config
 
 SCHEMA = settings.SCHEMA
- 
+JOB_TAG_NAMES = seed_config.JOB_TAG_NAMES
+TAG_COLORS = seed_config.TAG_COLORS
+PLAN_TEMPLATES = seed_config.PLAN_TEMPLATES
+PLAN_TOPICS = seed_config.PLAN_TOPICS
+PROBLEM_TEMPLATES = seed_config.PROBLEM_TEMPLATES
+PROBLEM_TOPICS = seed_config.PROBLEM_TOPICS
+JOB_DONE_TEMPLATES = seed_config.JOB_DONE_TEMPLATES
+JOB_DONE_TOPICS = seed_config.JOB_DONE_TOPICS
 
 # helpers 
 def random_past_date(days_back=90): #Случайная дата в прошлом (от 1 до days_back дней назад)
@@ -20,8 +27,7 @@ def random_updated_from_created(created_at, max_shift_hours=72):
     """
     now = datetime.now()
 
-    # если вдруг created_at в будущем (на всякий случай)
-    if created_at >= now:
+    if created_at >= now: # если вдруг created_at в будущем (на всякий случай)
         return now
 
     diff = now - created_at
@@ -153,22 +159,16 @@ def seed_day_reports_and_metrics(cur):
                 cur.execute(
                     f"""
                     INSERT INTO {SCHEMA}.metrics
-                        (uuid, created_at, updated_at,
-                        description, is_done, done_date,
-                        metric_estimation, way_uuid, parent_uuid)
+                        (uuid, created_at, updated_at, description, is_done, 
+                        done_date, metric_estimation, way_uuid, parent_uuid)
                     VALUES
                         (gen_random_uuid(), %s, %s,
                         %s, %s, %s,
                         %s, %s, NULL);
                     """,
                     (
-                        metric_created,
-                        metric_updated,
-                        description,
-                        is_done,
-                        done_date,
-                        estimation,
-                        way_uuid,
+                        metric_created, metric_updated, description, is_done,
+                        done_date, estimation, way_uuid,
                     ),
                 )
 
@@ -176,28 +176,6 @@ def seed_day_reports_and_metrics(cur):
 
 
 # B. job_tags 
-JOB_TAG_NAMES = [
-    "Практика SQL",
-    "Домашка по Python",
-    "Проектная задача",
-    "Подготовка к вебинару",
-    "Разбор ошибок",
-    "Чтение теории",
-    "Работа с дашбордами",
-    "Анализ метрик продукта",
-    "Подготовка к собеседованию",
-]
-
-TAG_COLORS = [
-    "#FF6B6B",
-    "#4ECDC4",
-    "#45B7D1",
-    "#F7B801",
-    "#9B5DE5",
-    "#00BBF9",
-    "#F15BB5",
-]
-
 def seed_job_tags(cur):
     print("  -> Seeding job_tags...")
 
@@ -237,25 +215,6 @@ def seed_job_tags(cur):
 
 
 # C. plans 
-PLAN_TEMPLATES = [
-    "Изучить новую тему: «{topic}».",
-    "Разобрать теорию и примеры по теме «{topic}».",
-    "Просмотреть обучающие материалы и выполнить практику по теме «{topic}».",
-    "Закрепить знания, выполнив упражнения по теме «{topic}».",
-    "Подготовиться к выполнению задач по теме «{topic}».",
-]
-
-PLAN_TOPICS = [
-    "SQL JOIN и группировка",
-    "Основы Python",
-    "Работа с данными в PostgreSQL",
-    "Построение дашбордов",
-    "Статистический анализ",
-    "A/B-тестирование",
-    "Обработка данных",
-    "Проектная работа",
-]
-
 def generate_plan_description():
     topic = random.choice(PLAN_TOPICS)
     template = random.choice(PLAN_TEMPLATES)
@@ -289,20 +248,15 @@ def seed_plans(cur):
             cur.execute(
                 f"""
                 INSERT INTO {SCHEMA}.plans
-                    (uuid, created_at, updated_at, description,
-                     time, owner_uuid, is_done, day_report_uuid)
+                    (uuid, created_at, updated_at, description, time, 
+                    owner_uuid, is_done, day_report_uuid)
                 VALUES
                     (gen_random_uuid(), %s, %s, %s,
                      %s, %s, %s, %s);
                 """,
                 (
-                    created_at,
-                    updated_at,
-                    description,
-                    time_spent,
-                    owner_uuid,
-                    is_done,
-                    day_report_uuid,
+                    created_at, updated_at, description, time_spent,
+                    owner_uuid, is_done, day_report_uuid,
                 ),
             )
 
@@ -363,29 +317,6 @@ def seed_plans_job_tags(cur):
 
 
 # E. problems 
-PROBLEM_TEMPLATES = [
-    "Решить задачи по теме «{topic}» (минимум {n} задания).",
-    "Разобрать примеры и самостоятельно написать решения по теме «{topic}».",
-    "Переписать конспект и подготовить шпаргалку по теме «{topic}».",
-    "Найти и исправить ошибки в коде/запросах по теме «{topic}».",
-    "Применить тему «{topic}» в мини-проекте или учебном кейсе.",
-    "Ответить на контрольные вопросы по теме «{topic}» (не менее {n} вопросов).",
-]
-
-PROBLEM_TOPICS = [
-    "SELECT и фильтрация данных в SQL",
-    "JOIN и работа с несколькими таблицами",
-    "Группировка и агрегатные функции",
-    "Работа с подзапросами",
-    "Операторы оконных функций",
-    "Основы Python: циклы и условия",
-    "Функции в Python",
-    "Работа с данными в PostgreSQL",
-    "Построение дашбордов в BI-инструментах",
-    "Аналитические метрики продукта",
-]
-
-
 def generate_problem_description():
     topic = random.choice(PROBLEM_TOPICS)
     n = random.randint(3, 10)
@@ -427,12 +358,8 @@ def seed_problems(cur):
                      %s, %s, %s, %s);
                 """,
                 (
-                    created_at,
-                    updated_at,
-                    description,
-                    is_done,
-                    owner_uuid,
-                    day_report_uuid,
+                    created_at, updated_at, description, is_done,
+                    owner_uuid, day_report_uuid,
                 ),
             )
 
@@ -440,28 +367,6 @@ def seed_problems(cur):
 
 
 # F. job_dones
-JOB_DONE_TEMPLATES = [
-    "Выполнил(а) задачу по теме «{topic}».",
-    "Завершил(а) упражнение: {topic}.",
-    "Разобрал(а) примеры и решил(а) задания по теме «{topic}».",
-    "Подготовил(а) решение задачи по теме «{topic}».",
-    "Проработал(а) теорию и выполнил(а) практику по теме «{topic}».",
-]
-
-JOB_DONE_TOPICS = [
-    "SQL JOIN и группировка",
-    "Основы Python",
-    "Работа с функциями в SQL",
-    "Оконные функции",
-    "Фильтрация данных",
-    "Циклы и условия в Python",
-    "Работа с данными в PostgreSQL",
-    "Построение дашбордов",
-    "Статистический анализ",
-    "A/B-тестирование",
-]
-
-
 def generate_job_done_description():
     topic = random.choice(JOB_DONE_TOPICS)
     template = random.choice(JOB_DONE_TEMPLATES)
@@ -495,19 +400,15 @@ def seed_job_dones(cur):
             cur.execute(
                 f"""
                 INSERT INTO {SCHEMA}.job_dones
-                    (uuid, created_at, updated_at,
-                     description, time, owner_uuid, day_report_uuid)
+                    (uuid, created_at, updated_at, description,  
+                    time, owner_uuid, day_report_uuid)
                 VALUES
                     (gen_random_uuid(), %s, %s,
                      %s, %s, %s, %s);
                 """,
                 (
-                    created_at,
-                    updated_at,
-                    description,
-                    minutes_spent,
-                    owner_uuid,
-                    day_report_uuid,
+                    created_at, updated_at, description, minutes_spent,
+                    owner_uuid, day_report_uuid,
                 ),
             )
 

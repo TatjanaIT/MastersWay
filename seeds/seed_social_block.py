@@ -3,23 +3,15 @@ from datetime import datetime, timedelta
 from faker import Faker
 
 from db.connection import get_connection
-from config import settings
+from config import settings, seed_config
 
 fake = Faker("ru_RU")
+
 SCHEMA = settings.SCHEMA
+COMMENT_TEMPLATES = seed_config.COMMENT_TEMPLATES
 
-
-COMMENT_TEMPLATES = [
-    "Сегодня было немного сложно, но в целом материал по теме понятен.",
-    "Застрял(а) на паре задач, нужно ещё раз пересмотреть теорию.",
-    "Чувствую прогресс, задачи даются легче, чем раньше.",
-    "Отличный день, получилось закрыть запланированный объём.",
-    "Не успел(а) всё, что хотел(а), но основные цели выполнены.",
-    "Есть вопросы по теме, планирую задать ментору на созвоне.",
-]
-
+# Helper functions
 def random_updated_from_created(created_at, max_shift_hours=24):
-   
     now = datetime.now()
     if created_at >= now:
         return now
@@ -73,18 +65,14 @@ def seed_comments(cur):
             cur.execute(
                 f"""
                 INSERT INTO {SCHEMA}.comments
-                    (uuid, created_at, updated_at,
-                     description, owner_uuid, day_report_uuid)
+                    (uuid, created_at, updated_at, description, 
+                    owner_uuid, day_report_uuid)
                 VALUES
-                    (gen_random_uuid(), %s, %s,
-                     %s, %s, %s);
+                    (gen_random_uuid(), %s, %s, %s, %s, %s);
                 """,
                 (
-                    created_at,
-                    updated_at,
-                    description,
-                    owner_uuid,
-                    day_report_uuid,
+                    created_at, updated_at, description,
+                    owner_uuid, day_report_uuid,
                 ),
             )
             total_inserted += 1
