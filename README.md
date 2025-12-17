@@ -1,54 +1,59 @@
-# MastersWay – учебный проект с PostgreSQL
+## MastersWay – Learning Project with PostgreSQL
 
-Проект моделирует систему путей обучения, активности студентов и менторства.  
+This project is a learning project that simulates:
+- learning paths, student activity, mentoring.
 
-Стек: PostgreSQL + Docker + Python (seeds), плюс Grafana и pgAdmin для работы с данными.
+Tech stack: PostgreSQL, Docker, and Python (seed scripts).
 
+Grafana and pgAdmin are used to view and work with the data.
 
-## 1. Предварительные требования
+## 1. Prerequisites (Linux / WSL Ubuntu)
+
+Before starting, make sure you have:
 
 - Python 3.12.3
 - Docker 29.0.1
 - Docker compose v2.40.3-desktop.1
 - Python3-venv
-    - sudo apt install python3-venv (выполнить один раз, если venv ещё не установлен)
+   - sudo apt install python3-venv (run once if it is not installed)
 
-## 2. Инструкция Linux/WSL Ubuntu система
+## 2. Instructions (from the project root)
 
-2. Создание  и активация виртуального окружения (из корня проекта)
-    - python3 -m venv venv (создаёт виртуальное окружение)
-    - source venv/bin/activate (активация venv)
-    
-        - Проверка: 
-            - в терминале перед строкой должно отображаться: (venv)
+1. Virtual environment
+    - python3 -m venv venv (Create a virtual environment) 
+    - source venv/bin/activate (Activate the virtual environment)
+        -You should see (venv) at the beginning of the terminal line
+    - pip install --upgrade pip (Update pip inside venv (optional but recommended))
 
-3. Установка библиотек для проекта (из корня проекта)
+2. Install project dependencies
     - pip install -r requirements.txt
 
-4. Запуск Docker-сервисов (из корня проекта)
+3. Start Docker services
     - docker compose up -d
+        - docker ps (check that containers are running)
+            
+            You should see
+            - postgres
+            - pgadmin
+            - grafana
 
-        - Проверка запуска контейнеров
-            - docker ps
+4. Database access (pgAdmin)
+    - (http://localhost:5050) (Open pgAdmin in the browser)
 
-                - Вы увидите сервисы:
-                    - postgres
-                    - pgadmin
-                    - grafana
+        - PPostgreSQL connection settings
+            - host: localhost
+            - port: 5433
+            - database: mydb
+            - user: postgres
+            - password: postgres
 
-    - База данных будет доступна:
-        - pgAdmin (web) http://localhost:5050
-            - PostgreSQL
-                - host: localhost
-                - port: 5433
-                - database: mydb
-                - user: postgres
-                - password: postgres
-
-6. Создание схемы и таблиц 
+5. Create database schema and tables
     - python3 create_shema_and_tables.py
 
-7. Применение сидов
+6. Run seed scripts
     - python3 reset_and_seed.py
 
-После выполнения — данные должны появиться в таблице и базе
+After this step, the tables should contain data.
+
+7. Remove the database schema (all tables and data)
+    - python3 drop_db.py
