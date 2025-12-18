@@ -29,7 +29,7 @@ Before starting, make sure you have:
     - pip install -r requirements.txt
 
 3. Start Docker services
-    - docker compose up -d
+    - docker compose up -d --build
         - docker ps (check that containers are running)
             
             You should see
@@ -40,9 +40,9 @@ Before starting, make sure you have:
 4. Database access (pgAdmin)
     - (http://localhost:5050) (Open pgAdmin in the browser)
 
-        - PPostgreSQL connection settings
-            - host: localhost
-            - port: 5433
+        - PostgreSQL connection settings
+            - host: postgres
+            - port: 5432
             - database: mydb
             - user: postgres
             - password: postgres
