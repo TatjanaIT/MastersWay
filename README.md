@@ -22,7 +22,7 @@ Before starting, make sure you have:
 1. Virtual environment
     - python3 -m venv venv (Create a virtual environment) 
     - source venv/bin/activate (Activate the virtual environment)
-        -You should see (venv) at the beginning of the terminal line
+        - You should see (venv) at the beginning of the terminal line
     - pip install --upgrade pip (Update pip inside venv (optional but recommended))
 
 2. Install project dependencies
@@ -48,7 +48,7 @@ Before starting, make sure you have:
             - password: postgres
 
 5. Create database schema and tables
-    - python3 create_shema_and_tables.py
+    - python3 create_sсhema_and_tables.py
 
 6. Run seed scripts
     - python3 reset_and_seed.py
