@@ -1,3 +1,9 @@
+# Можно менять на 6 или 12 (месяцев)
+SEED_MONTHS_BACK = 6  # или 12
+# чтобы было в днях:
+SEED_DAYS_BACK = 30 * SEED_MONTHS_BACK
+
+
 # 1. USERS BLOCK
 PRICING_PLANS = ["free", "ai-starter", "starter", "pro", "b2b"]
 
@@ -5,8 +11,8 @@ USER_TAG_NAMES = ["Python", "SQL", "PostgreSQL", "Power BI", "Tableau",
                   "Data Analyst", "Product Analyst", "Marketing",
                   "Junior", "Middle", "Senior", "Mentor"]
 
-MENTORS = 7
-STUDENTS = 23
+MENTORS = 5
+STUDENTS = 30
 
 # 2. WAYS BLOCK
 WAY_TAGS = [

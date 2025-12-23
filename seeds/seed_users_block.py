@@ -15,15 +15,24 @@ MENTORS = seed_config.MENTORS
 STUDENTS = seed_config.STUDENTS
 
 # Helper functions
-def random_date_within_6_months():
-    today = datetime.now()
-    delta_days = random.randint(0, 180)
-    return today - timedelta(days=delta_days)
+def random_date_within_period():
+    now = datetime.now()
+    days_back = max(1, seed_config.SEED_DAYS_BACK) # период в днях
+    delta_days = random.randint(1, days_back)  
+    return now - timedelta(days=delta_days)
 
-def random_updated_from_created(created_at): # Делает updated_at случайным моментом между created_at и сейчас, но никогда не в будущем.
+def random_updated_from_created(created_at):
+    """
+    updated_at:
+    - иногда = created_at (не обновляли), иначе случайно между created_at и сейчас
+    """
     now = datetime.now()
 
-    if created_at >= now: # если вдруг created_at уже в будущем (на всякий случай)
+    # 30% случаев: не обновляли запись
+    if random.random() < 0.30:
+        return created_at
+
+    if created_at >= now:
         return now
 
     diff = now - created_at
@@ -69,7 +78,7 @@ def seed_users_block(mentors_amount: int = MENTORS,
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute(f"SET search_path TO {settings.SCHEMA}, public;")
+    cur.execute(f"SET search_path TO {SCHEMA}, public;")
 
     print("= Seeding USERS BLOCK =")
 
@@ -80,7 +89,7 @@ def seed_users_block(mentors_amount: int = MENTORS,
         first = fake.first_name()
         last = fake.last_name()
         email = make_email(cur, first, last)
-        created_at = random_date_within_6_months()
+        created_at = random_date_within_period()
 
         cur.execute(
             """
@@ -110,11 +119,10 @@ def seed_users_block(mentors_amount: int = MENTORS,
     print(f"Inserted {len(user_ids)} users")
 
     # 2. PROFILE SETTINGS
-    now = datetime.now()
-
     for uid in user_ids:
-
         plan = random.choice(PRICING_PLANS)
+
+        now = datetime.now()
 
         if plan == "free":
             coins = random.randint(0, 150)
@@ -125,21 +133,19 @@ def seed_users_block(mentors_amount: int = MENTORS,
         elif plan == "starter":
             coins = random.randint(1500, 2500)
             expiration = now + timedelta(days=random.randint(60, 180))
-        else:  # pro
+        else:  # pro/b2b и т.д.
             coins = random.randint(3000, 5000)
             expiration = now + timedelta(days=random.randint(90, 365))
 
-        # created_at: какой-то момент за последние 6 месяцев (можно поменять 180 на 50, если надо)
-        created_at = now - timedelta(days=random.randint(0, 180))
+        created_at = random_date_within_period()
 
-        # updated_at: рандомно между created_at и сейчас
         updated_at = random_updated_from_created(created_at)
 
         cur.execute(
             """
             INSERT INTO profile_settings
                 (uuid, pricing_plan, coins, expiration_date,
-                 created_at, updated_at, owner_uuid)
+                created_at, updated_at, owner_uuid)
             VALUES
                 (gen_random_uuid(), %s, %s, %s, %s, %s, %s);
             """,

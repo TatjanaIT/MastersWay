@@ -1,5 +1,5 @@
 """
-Global seeder for the o_test schema.
+Global seeder for the 'mw_schema' schema.
 
 Runs all seeding blocks in the correct sequence:
 1) USERS BLOCK (users, profile_settings, user_contacts, user_tags, users_user_tags)

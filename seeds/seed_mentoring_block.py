@@ -49,8 +49,8 @@ def seed_mentoring_block():
 
             for mentor_uuid in current_mentors:
                 cur.execute(
-                    """
-                    INSERT INTO mentor_users_ways
+                    f"""
+                    INSERT INTO {SCHEMA}.mentor_users_ways
                         (user_uuid, way_uuid)
                     VALUES (%s, %s)
                     ON CONFLICT DO NOTHING;
@@ -66,8 +66,8 @@ def seed_mentoring_block():
                 former_for_way = random.sample(possible_former, k_former)
                 for former_uuid in former_for_way:
                     cur.execute(
-                        """
-                        INSERT INTO former_mentors_ways
+                        f"""
+                        INSERT INTO {SCHEMA}.former_mentors_ways
                             (former_mentor_uuid, way_uuid)
                         VALUES (%s, %s)
                         ON CONFLICT DO NOTHING;
@@ -85,8 +85,8 @@ def seed_mentoring_block():
 
             for way_uuid in chosen_ways:
                 cur.execute(
-                    """
-                    INSERT INTO from_user_mentoring_requests
+                    f"""
+                    INSERT INTO {SCHEMA}.from_user_mentoring_requests
                         (user_uuid, way_uuid)
                     VALUES (%s, %s)
                     ON CONFLICT DO NOTHING;
@@ -104,8 +104,8 @@ def seed_mentoring_block():
 
             for way_uuid in chosen_ways:
                 cur.execute(
-                    """
-                    INSERT INTO to_user_mentoring_requests
+                    f"""
+                    INSERT INTO {SCHEMA}.to_user_mentoring_requests
                         (user_uuid, way_uuid)
                     VALUES (%s, %s)
                     ON CONFLICT DO NOTHING;
