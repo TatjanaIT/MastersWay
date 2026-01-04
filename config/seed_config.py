@@ -1,5 +1,5 @@
 # Можно менять на 6 или 12 (месяцев)
-SEED_MONTHS_BACK = 6  # или 12
+SEED_MONTHS_BACK = 12  # или 12
 # чтобы было в днях:
 SEED_DAYS_BACK = 30 * SEED_MONTHS_BACK
 
@@ -11,8 +11,8 @@ USER_TAG_NAMES = ["Python", "SQL", "PostgreSQL", "Power BI", "Tableau",
                   "Data Analyst", "Product Analyst", "Marketing",
                   "Junior", "Middle", "Senior", "Mentor"]
 
-MENTORS = 5
-STUDENTS = 30
+MENTORS = 150
+STUDENTS = 500
 
 # 2. WAYS BLOCK
 WAY_TAGS = [
@@ -43,7 +43,7 @@ PROJECTS_TITLES = [
     "Мониторинг продуктовых метрик",
 ]
 
-PROJECTS_COUNT = 20
+PROJECTS_COUNT = 120
 
 WAY_NAMES = [
     "Python для аналитиков",
