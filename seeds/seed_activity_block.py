@@ -14,35 +14,31 @@ PROBLEM_TOPICS = seed_config.PROBLEM_TOPICS
 JOB_DONE_TEMPLATES = seed_config.JOB_DONE_TEMPLATES
 JOB_DONE_TOPICS = seed_config.JOB_DONE_TOPICS
 
-# helpers 
-def random_past_date(days_back=90): #Случайная дата в прошлом (от 1 до days_back дней назад)
+
+# HELPERS
+def random_past_date(days_back=90):
+    """Случайная дата в прошлом (от 1 до days_back дней назад)."""
     today = datetime.now()
-    delta = timedelta(days=random.randint(1, days_back)) 
-    return today - delta
+    return today - timedelta(days=random.randint(1, days_back))
 
 def random_updated_from_created(created_at, max_shift_hours=72):
-    """
-    Делает updated_at случайным моментом между created_at и сейчас,
-    но не позже now. max_shift_hours ограничивает максимальный сдвиг.
-    """
+    """updated_at случайно между created_at и сейчас, но с ограничением max_shift_hours."""
     now = datetime.now()
-
-    if created_at >= now: # если вдруг created_at в будущем (на всякий случай)
+    if created_at >= now:
         return now
 
     diff = now - created_at
     max_seconds = min(int(diff.total_seconds()), max_shift_hours * 3600)
-
     if max_seconds <= 0:
         return now
 
     shift_seconds = random.randint(0, max_seconds)
     return created_at + timedelta(seconds=shift_seconds)
 
+
 def get_unique_date_for_way(cur, way_uuid, days_back=90, max_tries=50):
     """
-    Подбирает дату, для которой ещё НЕТ отчёта для данного way_uuid.
-    Проверяет day_reports по дате (created_at::date).
+    Подбирает created_at так, чтобы для (way_uuid, created_at::date) не было дубля.
     """
     for _ in range(max_tries):
         dt = random_past_date(days_back)
@@ -62,9 +58,7 @@ def get_unique_date_for_way(cur, way_uuid, days_back=90, max_tries=50):
 
     return random_past_date(days_back)
 
-
 def generate_metric_description(is_done: bool, estimation: int) -> str:
-    """Описание метрики под учебную платформу."""
     tasks = [
         "урок по основам Python",
         "модуль по SQL и запросам",
@@ -75,14 +69,12 @@ def generate_metric_description(is_done: bool, estimation: int) -> str:
         "повторение пройденного материала",
         "созвон с ментором и разбор вопросов",
     ]
-
     outcomes_done = [
         "Задача выполнена, материал усвоен на хорошем уровне.",
         "Завершил(а) работу и закрепил(а) ключевые концепции.",
         "Задание закрыл(а), появилось больше уверенности в теме.",
         "Задача успешно выполнена, можно двигаться дальше.",
     ]
-
     outcomes_in_progress = [
         "Задача в процессе, нужно доделать оставшуюся часть.",
         "Успел(а) сделать только часть задания, планирую завершить позже.",
@@ -91,7 +83,6 @@ def generate_metric_description(is_done: bool, estimation: int) -> str:
     ]
 
     task = random.choice(tasks)
-
     if is_done:
         outcome = random.choice(outcomes_done)
         status_text = "завершена"
@@ -106,22 +97,40 @@ def generate_metric_description(is_done: bool, estimation: int) -> str:
     return description[:295]
 
 
-# A. day_reports + metrics 
-def seed_day_reports_and_metrics(cur):
+# A. day_reports + metrics (FIX: limits to avoid huge runtime)
+def seed_day_reports_and_metrics(
+    cur,
+    days_back=90,
+    max_ways=300,              # <-- лимит на количество ways (чтобы не "висло")
+    reports_min=2,
+    reports_max=6,
+    metrics_min=1,
+    metrics_max=3,
+):
     print("  -> Seeding day_reports & metrics...")
 
     cur.execute(f"SELECT uuid FROM {SCHEMA}.ways;")
     way_ids = [row[0] for row in cur.fetchall()]
-
     if not way_ids:
         print("  [!] No ways found. Seed ways first.")
         return
 
-    for way_uuid in way_ids:
-        reports_count = random.randint(3, 8)
+    # FIX: ограничим объём, иначе будет очень долго
+    if len(way_ids) > max_ways:
+        way_ids = random.sample(way_ids, max_ways)
+
+    inserted_reports = 0
+    inserted_metrics = 0
+
+    for idx, way_uuid in enumerate(way_ids, start=1):
+        # прогресс-индикатор каждые 50 ways
+        if idx % 50 == 0:
+            print(f"     ...processed {idx}/{len(way_ids)} ways")
+
+        reports_count = random.randint(reports_min, reports_max)
 
         for _ in range(reports_count):
-            created_at = get_unique_date_for_way(cur, way_uuid, days_back=90)
+            created_at = get_unique_date_for_way(cur, way_uuid, days_back=days_back)
             updated_at = random_updated_from_created(created_at, max_shift_hours=24)
 
             cur.execute(
@@ -134,17 +143,13 @@ def seed_day_reports_and_metrics(cur):
                 """,
                 (way_uuid, created_at, updated_at),
             )
-            
             day_report_id = cur.fetchone()[0]
+            inserted_reports += 1
 
-            metrics_count = random.randint(2, 5)
+            metrics_count = random.randint(metrics_min, metrics_max)
             for _m in range(metrics_count):
-                metric_created = created_at + timedelta(
-                    minutes=random.randint(0, 600)
-                )
-                
+                metric_created = created_at + timedelta(minutes=random.randint(0, 600))
                 metric_updated = random_updated_from_created(metric_created, max_shift_hours=48)
-
 
                 is_done = random.choice([True, False])
                 done_date = (
@@ -159,40 +164,45 @@ def seed_day_reports_and_metrics(cur):
                 cur.execute(
                     f"""
                     INSERT INTO {SCHEMA}.metrics
-                        (uuid, created_at, updated_at, description, is_done, 
-                        done_date, metric_estimation, way_uuid, parent_uuid)
+                        (uuid, created_at, updated_at, description, is_done,
+                         done_date, metric_estimation, way_uuid, parent_uuid)
                     VALUES
                         (gen_random_uuid(), %s, %s,
-                        %s, %s, %s,
-                        %s, %s, NULL);
+                         %s, %s, %s,
+                         %s, %s, NULL);
                     """,
                     (
-                        metric_created, metric_updated, description, is_done,
-                        done_date, estimation, way_uuid,
+                        metric_created,
+                        metric_updated,
+                        description,
+                        is_done,
+                        done_date,
+                        estimation,
+                        way_uuid,
                     ),
                 )
+                inserted_metrics += 1
 
-    print("  <- day_reports & metrics done")
+    print(f"  <- day_reports & metrics done (reports={inserted_reports}, metrics={inserted_metrics})")
 
 
-# B. job_tags 
-def seed_job_tags(cur):
+# B. job_tags (FIX: limit ways)
+def seed_job_tags(cur, max_ways=500):
     print("  -> Seeding job_tags...")
 
-    # получаем все пути
     cur.execute(f"SELECT uuid FROM {SCHEMA}.ways;")
     way_ids = [row[0] for row in cur.fetchall()]
     if not way_ids:
         print("  [!] No ways found. Seed ways first.")
         return
 
+    if len(way_ids) > max_ways:
+        way_ids = random.sample(way_ids, max_ways)
+
     inserted = 0
-
     for way_uuid in way_ids:
-
-        # 3–6 тегов на путь
         tags_count = random.randint(3, 6)
-        chosen_names = random.sample(JOB_TAG_NAMES, tags_count)
+        chosen_names = random.sample(JOB_TAG_NAMES, min(tags_count, len(JOB_TAG_NAMES)))
 
         for name in chosen_names:
             description = f"Тег для задач: {name.lower()}."
@@ -208,19 +218,18 @@ def seed_job_tags(cur):
                 """,
                 (name, description, color, way_uuid),
             )
-
             inserted += 1
 
-    print(f"  <- job_tags done (inserted {inserted})")
+    print(f"  <- job_tags done (insert attempts {inserted})")
 
 
-# C. plans 
+# C. plans
 def generate_plan_description():
     topic = random.choice(PLAN_TOPICS)
     template = random.choice(PLAN_TEMPLATES)
     return template.format(topic=topic)
 
-def seed_plans(cur):
+def seed_plans(cur, max_reports=2000):
     print("  -> Seeding plans...")
 
     cur.execute(f"SELECT uuid FROM {SCHEMA}.users;")
@@ -235,8 +244,12 @@ def seed_plans(cur):
         print("  [!] No day_reports found.")
         return
 
+    # FIX: ограничим, чтобы не улететь в десятки тысяч планов
+    if len(reports) > max_reports:
+        reports = random.sample(reports, max_reports)
+
     for day_report_uuid, created_at in reports:
-        plans_count = random.randint(2, 5)
+        plans_count = random.randint(1, 3)  # было 2-5, уменьшаем для скорости
         owner_uuid = random.choice(user_ids)
 
         for _ in range(plans_count):
@@ -248,23 +261,28 @@ def seed_plans(cur):
             cur.execute(
                 f"""
                 INSERT INTO {SCHEMA}.plans
-                    (uuid, created_at, updated_at, description, time, 
-                    owner_uuid, is_done, day_report_uuid)
+                    (uuid, created_at, updated_at, description, time,
+                     owner_uuid, is_done, day_report_uuid)
                 VALUES
                     (gen_random_uuid(), %s, %s, %s,
                      %s, %s, %s, %s);
                 """,
                 (
-                    created_at, updated_at, description, time_spent,
-                    owner_uuid, is_done, day_report_uuid,
+                    created_at,
+                    updated_at,
+                    description,
+                    time_spent,
+                    owner_uuid,
+                    is_done,
+                    day_report_uuid,
                 ),
             )
 
     print("  <- plans done")
 
 
-# D. plans_job_tags 
-def seed_plans_job_tags(cur):
+# D. plans_job_tags
+def seed_plans_job_tags(cur, max_plan_rows=5000):
     print("  -> Seeding plans_job_tags...")
 
     cur.execute(f"SELECT uuid, way_uuid FROM {SCHEMA}.job_tags;")
@@ -291,13 +309,16 @@ def seed_plans_job_tags(cur):
         print("  [!] No plans found.")
         return
 
+    if len(plan_rows) > max_plan_rows:
+        plan_rows = random.sample(plan_rows, max_plan_rows)
+
     inserted = 0
     for plan_uuid, way_uuid in plan_rows:
         tags_for_way = job_tags_by_way.get(way_uuid)
         if not tags_for_way:
             continue
 
-        k = min(random.randint(1, 3), len(tags_for_way))
+        k = min(random.randint(1, 2), len(tags_for_way))  # было 1-3, уменьшаем
         chosen_tags = random.sample(tags_for_way, k)
 
         for job_tag_uuid in chosen_tags:
@@ -313,10 +334,10 @@ def seed_plans_job_tags(cur):
             )
             inserted += 1
 
-    print(f"  <- plans_job_tags done (inserted {inserted})")
+    print(f"  <- plans_job_tags done (insert attempts {inserted})")
 
 
-# E. problems 
+# E. problems
 def generate_problem_description():
     topic = random.choice(PROBLEM_TOPICS)
     n = random.randint(3, 10)
@@ -324,7 +345,7 @@ def generate_problem_description():
     text = template.format(topic=topic, n=n)
     return text if len(text) <= 2950 else text[:2950]
 
-def seed_problems(cur):
+def seed_problems(cur, max_reports=1500):
     print("  -> Seeding problems...")
 
     cur.execute(f"SELECT uuid FROM {SCHEMA}.users;")
@@ -339,9 +360,12 @@ def seed_problems(cur):
         print("  [!] No day_reports found.")
         return
 
+    if len(report_rows) > max_reports:
+        report_rows = random.sample(report_rows, max_reports)
+
     for day_report_uuid, created_at in report_rows:
         owner_uuid = random.choice(user_ids)
-        problems_count = random.randint(2, 6)
+        problems_count = random.randint(1, 3)  # было 2-6, уменьшаем
 
         for _ in range(problems_count):
             description = generate_problem_description()
@@ -358,8 +382,12 @@ def seed_problems(cur):
                      %s, %s, %s, %s);
                 """,
                 (
-                    created_at, updated_at, description, is_done,
-                    owner_uuid, day_report_uuid,
+                    created_at,
+                    updated_at,
+                    description,
+                    is_done,
+                    owner_uuid,
+                    day_report_uuid,
                 ),
             )
 
@@ -372,8 +400,7 @@ def generate_job_done_description():
     template = random.choice(JOB_DONE_TEMPLATES)
     return template.format(topic=topic)[:2900]
 
-
-def seed_job_dones(cur):
+def seed_job_dones(cur, max_reports=1500):
     print("  -> Seeding job_dones...")
 
     cur.execute(f"SELECT uuid FROM {SCHEMA}.users;")
@@ -388,9 +415,12 @@ def seed_job_dones(cur):
         print("  [!] No day_reports found.")
         return
 
+    if len(reports) > max_reports:
+        reports = random.sample(reports, max_reports)
+
     for day_report_uuid, created_at in reports:
         owner_uuid = random.choice(users)
-        count = random.randint(3, 7)
+        count = random.randint(1, 4)  # было 3-7, уменьшаем
 
         for _ in range(count):
             description = generate_job_done_description()
@@ -400,26 +430,29 @@ def seed_job_dones(cur):
             cur.execute(
                 f"""
                 INSERT INTO {SCHEMA}.job_dones
-                    (uuid, created_at, updated_at, description,  
-                    time, owner_uuid, day_report_uuid)
+                    (uuid, created_at, updated_at, description,
+                     time, owner_uuid, day_report_uuid)
                 VALUES
                     (gen_random_uuid(), %s, %s,
                      %s, %s, %s, %s);
                 """,
                 (
-                    created_at, updated_at, description, minutes_spent,
-                    owner_uuid, day_report_uuid,
+                    created_at,
+                    updated_at,
+                    description,
+                    minutes_spent,
+                    owner_uuid,
+                    day_report_uuid,
                 ),
             )
 
     print("  <- job_dones done")
 
 
-# G. job_dones_job_tags 
-def seed_job_dones_job_tags(cur):
+# G. job_dones_job_tags
+def seed_job_dones_job_tags(cur, max_rows=6000):
     print("  -> Seeding job_dones_job_tags...")
 
-    # 1. job_tags по way_uuid
     cur.execute(f"SELECT uuid, way_uuid FROM {SCHEMA}.job_tags;")
     rows = cur.fetchall()
     if not rows:
@@ -430,7 +463,6 @@ def seed_job_dones_job_tags(cur):
     for tag_uuid, way_uuid in rows:
         tags_by_way.setdefault(way_uuid, []).append(tag_uuid)
 
-    # 2. job_dones + way_uuid
     cur.execute(
         f"""
         SELECT jd.uuid AS job_done_uuid,
@@ -445,13 +477,16 @@ def seed_job_dones_job_tags(cur):
         print("  [!] No job_dones found.")
         return
 
+    if len(job_done_rows) > max_rows:
+        job_done_rows = random.sample(job_done_rows, max_rows)
+
     inserted = 0
     for job_done_uuid, way_uuid in job_done_rows:
         tags = tags_by_way.get(way_uuid)
         if not tags:
             continue
 
-        k = min(random.randint(1, 3), len(tags))
+        k = min(random.randint(1, 2), len(tags))
         chosen = random.sample(tags, k)
 
         for tag_uuid in chosen:
@@ -466,9 +501,10 @@ def seed_job_dones_job_tags(cur):
             )
             inserted += 1
 
-    print(f"  <- job_dones_job_tags done (inserted {inserted})")
+    print(f"  <- job_dones_job_tags done (insert attempts {inserted})")
 
-# MAIN BLOCK 
+
+# MAIN BLOCK
 def seed_activity_block():
     print("=== Seeding ACTIVITY BLOCK ===")
 
@@ -477,21 +513,41 @@ def seed_activity_block():
         cur = conn.cursor()
         cur.execute(f"SET search_path TO {SCHEMA}, public;")
 
-        seed_day_reports_and_metrics(cur)
-        seed_job_tags(cur)
-        seed_plans(cur)
-        seed_plans_job_tags(cur)
-        seed_problems(cur)
-        seed_job_dones(cur)
-        seed_job_dones_job_tags(cur)
-
+        # FIX: самый тяжёлый шаг — сначала, с лимитами, плюс промежуточный commit
+        seed_day_reports_and_metrics(cur, max_ways=300, reports_min=2, reports_max=6, metrics_min=1, metrics_max=3)
         conn.commit()
+        print("  [OK] day_reports & metrics committed")
+
+        seed_job_tags(cur, max_ways=500)
+        conn.commit()
+        print("  [OK] job_tags committed")
+
+        seed_plans(cur, max_reports=2000)
+        conn.commit()
+        print("  [OK] plans committed")
+
+        seed_plans_job_tags(cur, max_plan_rows=5000)
+        conn.commit()
+        print("  [OK] plans_job_tags committed")
+
+        seed_problems(cur, max_reports=1500)
+        conn.commit()
+        print("  [OK] problems committed")
+
+        seed_job_dones(cur, max_reports=1500)
+        conn.commit()
+        print("  [OK] job_dones committed")
+
+        seed_job_dones_job_tags(cur, max_rows=6000)
+        conn.commit()
+        print("  [OK] job_dones_job_tags committed")
+
         print("=== ACTIVITY BLOCK COMPLETED ===")
-   
+
     except Exception as e:
         conn.rollback()
         print("Error in activity block:", e)
-    
+
     finally:
         conn.close()
 
